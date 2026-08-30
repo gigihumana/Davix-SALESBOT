@@ -1,13 +1,14 @@
 # Davix Sales Bot
 
+<div align="center">
+  <img src="standart.gif" alt="Davix Sales Bot Demo">
+</div>
+
 A complete, production-grade Discord sales bot in Python (`discord.py`), built
 around a plugin-style payment gateway architecture, encrypted data at rest,
 private per-order "cart" channels, coupons, staff tooling, and automatic
 branding (its own icon + its own animated emojis, uploaded on first boot -
 nothing to generate or configure by hand).
-
-**~4,400 lines of Python** across a clean, modular layout - not a single
-giant file - so it's actually maintainable and easy to extend.
 
 ## Highlights
 
