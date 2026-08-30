@@ -1,7 +1,6 @@
-# Davix Sales Bot
-
 <div align="center">
-  <img src="standart.gif" alt="Davix Sales Bot Demo">
+  <img src="https://raw.githubusercontent.com/gigihumana/Davix-SALESBOT/main/standard.gif" alt="Davix Sales Bot GIF" />
+  <h1>Davix Sales Bot</h1>
 </div>
 
 A complete, production-grade Discord sales bot in Python (`discord.py`), built
