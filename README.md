@@ -1,6 +1,20 @@
+```markdown
 <div align="center">
   <img src="https://raw.githubusercontent.com/gigihumana/Davix-SALESBOT/main/standard.gif" alt="Davix Sales Bot GIF" />
   <h1>Davix Sales Bot</h1>
+
+  <p>
+    <a href="https://github.com/gigihumana/Davix-SALESBOT/stargazers">
+      <img src="https://img.shields.io/github/stars/gigihumana/Davix-SALESBOT?style=for-the-badge&logo=github&color=FADB5F" alt="Stars">
+    </a>
+    <a href="https://github.com/gigihumana/Davix-SALESBOT/network/members">
+      <img src="https://img.shields.io/github/forks/gigihumana/Davix-SALESBOT?style=for-the-badge&logo=github&color=339AF0" alt="Forks">
+    </a>
+    <a href="https://github.com/gigihumana/Davix-SALESBOT/issues">
+      <img src="https://img.shields.io/github/issues/gigihumana/Davix-SALESBOT?style=for-the-badge&logo=github&color=FA5252" alt="Issues">
+    </a>
+    <img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11+">
+  </p>
 </div>
 
 A complete, production-grade Discord sales bot in Python (`discord.py`), built
@@ -51,12 +65,14 @@ nothing to generate or configure by hand).
 ```bash
 pip install -r requirements.txt
 cp .env.example .env
+
 ```
 
 Generate your encryption key and paste it into `.env`:
 
 ```bash
 python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+
 ```
 
 Fill in `.env`:
@@ -65,12 +81,14 @@ Fill in `.env`:
 DISCORD_TOKEN=your-bot-token
 DISCORD_APPLICATION_ID=your-application-id
 MASTER_ENCRYPTION_KEY=the-key-you-just-generated
+
 ```
 
 Run it:
 
 ```bash
 python3 main.py
+
 ```
 
 That's it - on first connect the bot uploads its icon and 13 animated
@@ -79,49 +97,51 @@ emojis automatically. No extra step, no script to run.
 ### In Discord
 
 1. `/setup` - pick the channel where the buy panel is posted, and (recommended)
-   a log channel for sales/alerts.
+a log channel for sales/alerts.
 2. `/staff add role:@Support` - optional, lets a role manage the store
-   without full `Manage Server` permission.
+without full `Manage Server` permission.
 3. `/gateway setup` - pick a gateway from the dropdown, fill in its
-   credentials in the modal. Repeat for every gateway you want to accept.
+credentials in the modal. Repeat for every gateway you want to accept.
 4. `/gateway test gateway:stripe` - confirms the credentials actually work
-   before a real buyer hits them.
+before a real buyer hits them.
 5. `/product add name:"Premium Role" price:19.90 currency:BRL delivery:stock`
-   - creates a product. Add `cart_category:#tickets` if you want a private
-   channel per purchase.
+* creates a product. Add `cart_category:#tickets` if you want a private
+channel per purchase.
+
+
 6. `/product stock-add product_id:1 items:"KEY-AAA\nKEY-BBB\nKEY-CCC"` - one
-   item per line; each buyer gets exactly one line, and it's encrypted at
-   rest.
+item per line; each buyer gets exactly one line, and it's encrypted at
+rest.
 7. (Optional) `/product set-file product_id:1 file:<upload>` - attaches a
-   file sent alongside/instead of a stock line.
+file sent alongside/instead of a stock line.
 8. (Optional) `/coupon create code:LAUNCH10 percent_off:10` - buyers apply
-   it at checkout before picking a payment method.
+it at checkout before picking a payment method.
 9. `/panel` - posts the Buy button. Done.
 
 ## How a purchase flows
 
 1. Buyer clicks **Buy** -> picks a product -> optionally applies a coupon ->
-   picks a payment method.
+picks a payment method.
 2. If the product has a cart category set, a private channel is created
-   for just that buyer + staff; otherwise everything happens in an
-   ephemeral message.
+for just that buyer + staff; otherwise everything happens in an
+ephemeral message.
 3. The bot creates the charge on the gateway (Pix QR code, checkout link,
-   whatever fits that gateway) and shows it, plus a reminder to keep DMs
-   open.
+whatever fits that gateway) and shows it, plus a reminder to keep DMs
+open.
 4. The bot confirms payment either instantly (webhook, if you've enabled
-   one) or within `PAYMENT_POLL_INTERVAL` seconds (polling, on by default,
-   zero setup required).
+one) or within `PAYMENT_POLL_INTERVAL` seconds (polling, on by default,
+zero setup required).
 5. On confirmation: stock is atomically claimed (never double-claimed),
-   any attached file is snapshotted for this specific order, a role is
-   granted if applicable, and everything is DMed to the buyer. The exact
-   content is saved to the order so it can be resent identically later.
+any attached file is snapshotted for this specific order, a role is
+granted if applicable, and everything is DMed to the buyer. The exact
+content is saved to the order so it can be resent identically later.
 6. If the DM fails, staff are notified where to help, and the buyer can
-   run `/resend` themselves once DMs are open again.
+run `/resend` themselves once DMs are open again.
 
 ## Payment gateways included
 
 | Gateway | Region / currencies | Method |
-|---|---|---|
+| --- | --- | --- |
 | Mercado Pago | BRL | Pix (QR + copy-paste code) |
 | PushinPay | BRL | Pix, lightweight |
 | Asaas | BRL | Pix (auto-creates a lightweight customer) |
@@ -148,8 +168,7 @@ one-file extension point for developers who want to add more.
 `/setup`, `/staff add|remove|list`, `/gateway setup|disable|list|test`
 
 **Products**
-`/product add|edit|info|list|remove|toggle|stock-add|set-file|
-set-cart-category|set-lowstock`
+`/product add|edit|info|list|remove|toggle|stock-add|set-file| set-cart-category|set-lowstock`
 
 **Coupons**
 `/coupon create|delete|list`
@@ -179,6 +198,7 @@ proxy or tunnel), and register:
 
 ```
 <WEBHOOK_PUBLIC_URL>/webhook/<gateway_key>/<guild_id>
+
 ```
 
 in each gateway's dashboard, e.g. `/webhook/stripe/123456789012345678`.
@@ -215,4 +235,9 @@ cogs/orders.py                /order status|confirm|cancel|refund|resend|history
 cogs/misc.py                  /ping, /about, /help
 utils/                        security, embeds, logging, emoji + icon manager
 assets/icon/, assets/emojis/  pre-generated branding (icon + animated emojis) - ready to use
+
+```
+
+```
+
 ```
