@@ -23,10 +23,14 @@ from utils.logger import log
 EMOJI_DIR = os.path.join(os.path.dirname(__file__), "..", "assets", "emojis")
 API = "https://discord.com/api/v10"
 MAX_EMOJI_BYTES = 256 * 1024  # Discord's application emoji upload cap
+# Bump this suffix whenever the shipped artwork changes. Discord cannot replace
+# an emoji image in place, so a versioned remote name is the reliable way to
+# roll new assets out to applications that already uploaded the old set.
+EMOJI_ASSET_VERSION = "v2"
 
 
 class EmojiManager:
-    """Holds name -> `<:name:id>` mappings once emojis are ensured to exist."""
+    """Holds logical name -> Discord mention mappings for Davix emojis."""
 
     def __init__(self):
         self.emojis: dict[str, str] = {}
@@ -40,24 +44,72 @@ class EmojiManager:
             existing = await self._fetch_existing(session, application_id)
             files = sorted(glob.glob(os.path.join(EMOJI_DIR, "*.gif")))
             files += sorted(glob.glob(os.path.join(EMOJI_DIR, "*.png")))
+            migrated: set[str] = set()
             for path in files:
-                name = os.path.splitext(os.path.basename(path))[0]
-                if name in existing:
-                    self.emojis[name] = f"<:{name}:{existing[name]}>"
+                logical_name = os.path.splitext(os.path.basename(path))[0]
+                remote_name = f"{logical_name}_{EMOJI_ASSET_VERSION}"
+                asset_is_animated = path.lower().endswith(".gif")
+                if remote_name in existing:
+                    record = existing[remote_name]
+                    is_animated = bool(record.get("animated")) or asset_is_animated
+                    self.emojis[logical_name] = self._mention(remote_name, int(record["id"]), is_animated)
+                    migrated.add(logical_name)
                     continue
                 try:
-                    new_id = await self._upload(session, application_id, name, path)
-                    self.emojis[name] = f"<:{name}:{new_id}>"
-                    log.info(f"Created application emoji :{name}:")
+                    new_id = await self._upload(session, application_id, remote_name, path)
+                    self.emojis[logical_name] = self._mention(remote_name, new_id, asset_is_animated)
+                    migrated.add(logical_name)
+                    log.info(f"Created application emoji :{remote_name}:")
                 except Exception as exc:
-                    log.warning(f"Could not create emoji '{name}': {exc}")
+                    # Keep an old installed emoji working if a migration upload
+                    # fails; the next startup will retry the v2 asset.
+                    legacy = existing.get(logical_name)
+                    if legacy:
+                        is_animated = bool(legacy.get("animated")) or asset_is_animated
+                        self.emojis[logical_name] = self._mention(logical_name, int(legacy["id"]), is_animated)
+                    log.warning(f"Could not create emoji '{remote_name}': {exc}")
 
-    async def _fetch_existing(self, session: aiohttp.ClientSession, app_id: int) -> dict[str, int]:
+            await self._remove_obsolete_versions(session, application_id, existing, migrated)
+
+    @staticmethod
+    def _mention(name: str, emoji_id: int, animated: bool) -> str:
+        prefix = "a" if animated else ""
+        return f"<{prefix}:{name}:{emoji_id}>"
+
+    async def _fetch_existing(
+        self, session: aiohttp.ClientSession, app_id: int
+    ) -> dict[str, dict[str, int | bool]]:
         async with session.get(f"{API}/applications/{app_id}/emojis") as resp:
             if resp.status != 200:
                 return {}
             data = await resp.json()
-        return {e["name"]: int(e["id"]) for e in data.get("items", [])}
+        return {
+            e["name"]: {"id": int(e["id"]), "animated": bool(e.get("animated", False))}
+            for e in data.get("items", [])
+        }
+
+    async def _remove_obsolete_versions(
+        self,
+        session: aiohttp.ClientSession,
+        app_id: int,
+        existing: dict[str, dict[str, int | bool]],
+        migrated: set[str],
+    ) -> None:
+        """Remove only Davix versions superseded by a confirmed v2 upload."""
+        for remote_name, record in existing.items():
+            for logical_name in migrated:
+                current_name = f"{logical_name}_{EMOJI_ASSET_VERSION}"
+                is_legacy = remote_name == logical_name
+                is_old_version = remote_name.startswith(f"{logical_name}_v") and remote_name != current_name
+                if not (is_legacy or is_old_version):
+                    continue
+                async with session.delete(f"{API}/applications/{app_id}/emojis/{record['id']}") as resp:
+                    if resp.status in (200, 204):
+                        log.info(f"Removed obsolete application emoji :{remote_name}:")
+                    else:
+                        body = await resp.text()
+                        log.warning(f"Could not remove obsolete emoji '{remote_name}': {resp.status}: {body}")
+                break
 
     async def _upload(
         self, session: aiohttp.ClientSession, app_id: int, name: str, path: str

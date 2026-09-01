@@ -204,9 +204,18 @@ payment.
 
 `assets/icon/davix_icon*.png` and `assets/emojis/*.gif` ship pre-generated
 and ready to use - the bot uploads them automatically on first run. There
-is no generator script to run and nothing to configure; if you ever want
-to redesign the artwork, just replace the files in `assets/` with your own
-same-named PNG/GIF files before starting the bot.
+is nothing to configure. The 13 animated emojis use bold silhouettes,
+semantic colors, transparent backgrounds, and short loops designed to stay
+readable at Discord's 32x32 display size.
+
+![Davix animated emoji set preview](assets/emoji-preview.png)
+
+The emoji set is reproducible. To regenerate it after installing Pillow,
+run `python scripts/generate_emojis.py`. The script renders at 4x, exports
+128x128 GIFs, and validates every frame, loop, filename, and the 256KB upload
+limit. If the artwork changes again, bump `EMOJI_ASSET_VERSION` in
+`utils/emoji_manager.py` so existing bot installations migrate to the new
+remote assets on their next start.
 
 ## Security
 
