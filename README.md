@@ -3,6 +3,20 @@
   <h1>Davix Sales Bot</h1>
 </div>
 
+<p>
+    <a href="https://github.com/gigihumana/Davix-SALESBOT/stargazers">
+      <img src="https://img.shields.io/github/stars/gigihumana/Davix-SALESBOT?style=for-the-badge&logo=github&color=FADB5F" alt="Stars">
+    </a>
+    <a href="https://github.com/gigihumana/Davix-SALESBOT/network/members">
+      <img src="https://img.shields.io/github/forks/gigihumana/Davix-SALESBOT?style=for-the-badge&logo=github&color=339AF0" alt="Forks">
+    </a>
+    <a href="https://github.com/gigihumana/Davix-SALESBOT/issues">
+      <img src="https://img.shields.io/github/issues/gigihumana/Davix-SALESBOT?style=for-the-badge&logo=github&color=FA5252" alt="Issues">
+    </a>
+    <img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11+">
+  </p>
+</div>
+
 A complete, production-grade Discord sales bot in Python (`discord.py`), built
 around a plugin-style payment gateway architecture, encrypted data at rest,
 private per-order "cart" channels, coupons, staff tooling, and automatic
